@@ -18,7 +18,7 @@
         </plugins>
     </build>
     <groupId>de.sabbertran.proxysuite.bukkit</groupId>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
 
     <repositories>
         <!-- Bukkit/Spigot repository -->
