@@ -8,14 +8,20 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 
 public class ProxySuiteBukkit extends JavaPlugin {
 
+    private HashMap<String, BukkitTask> pendingWarmupTeleports;
     private HashMap<String, Location> pendingLocationTeleports;
     private HashMap<String, String> pendingPlayerTeleports;
     private HashMap<String, World> pendingSpawnTeleports;
@@ -28,9 +34,10 @@ public class ProxySuiteBukkit extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        pendingLocationTeleports = new HashMap<String, Location>();
-        pendingPlayerTeleports = new HashMap<String, String>();
-        pendingSpawnTeleports = new HashMap<String, World>();
+        pendingWarmupTeleports = new HashMap<>();
+        pendingLocationTeleports = new HashMap<>();
+        pendingPlayerTeleports = new HashMap<>();
+        pendingSpawnTeleports = new HashMap<>();
 
         portalHandler = new PortalHandler(this);
 
@@ -97,6 +104,10 @@ public class ProxySuiteBukkit extends JavaPlugin {
         return chat;
     }
 
+    public HashMap<String, BukkitTask> getPendingWarmupTeleports() {
+        return pendingWarmupTeleports;
+    }
+
     public HashMap<String, Location> getPendingLocationTeleports() {
         return pendingLocationTeleports;
     }
@@ -127,5 +138,33 @@ public class ProxySuiteBukkit extends JavaPlugin {
 
     public void setRequestPortals(boolean requestPortals) {
         this.requestPortals = requestPortals;
+    }
+
+    public void cancelWarmup(Player player) {
+        if(!pendingWarmupTeleports.containsKey(player.getName())) {
+            return;
+        }
+
+        BukkitTask warmup = pendingWarmupTeleports.remove(player.getName());
+        warmup.cancel();
+
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(b);
+        try {
+            out.writeUTF("SendConfigMessage");
+            out.writeUTF(player.getName());
+            out.writeUTF("teleport.warmup.cancelled");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        player.sendPluginMessage(this, "ProxySuite", b.toByteArray());
+    }
+
+    public void teleportRequest(Player player, Location destination) {
+        if (player != null && player.isOnline()) {
+            player.teleport(destination);
+        } else {
+            pendingLocationTeleports.put(player.getName(), destination);
+        }
     }
 }

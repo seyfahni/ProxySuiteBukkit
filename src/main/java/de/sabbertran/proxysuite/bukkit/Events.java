@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -88,11 +89,9 @@ public class Events implements Listener {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            main.getServer().getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
-                public void run() {
-                    p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
-                    main.setRequestPortals(false);
-                }
+            main.getServer().getScheduler().scheduleSyncDelayedTask(main, () -> {
+                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                main.setRequestPortals(false);
             }, 20L);
         }
     }
@@ -111,6 +110,7 @@ public class Events implements Listener {
             e.printStackTrace();
         }
         p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+        main.cancelWarmup(ev.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -127,6 +127,8 @@ public class Events implements Listener {
             Portal p = main.getPortalHandler().getPortal(to.getBlock());
             if (p != null)
                 p.notifyEnter(ev.getPlayer());
+
+            main.cancelWarmup(ev.getPlayer());
         }
     }
 
@@ -164,5 +166,6 @@ public class Events implements Listener {
             e.printStackTrace();
         }
         p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+        main.cancelWarmup(p);
     }
 }
