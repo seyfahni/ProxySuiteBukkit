@@ -17,7 +17,6 @@ public class BunCommand implements CommandExecutor {
         this.main = main;
     }
 
-    @Override
     public boolean onCommand(CommandSender sender, Command cmd, String st, String[] args) {
         if (!(sender instanceof Player) && args.length > 1 && main.getServer().getOnlinePlayers().size() > 0) {
             String player = args[0];
