@@ -96,7 +96,7 @@ public class PMessageListener implements PluginMessageListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
         } else if (subchannel.equals("GetPermissions")) {
             String player = in.readUTF();
@@ -109,7 +109,7 @@ public class PMessageListener implements PluginMessageListener {
                         out.writeUTF("Permissions");
                         out.writeUTF(p.getName());
                         out.writeUTF("*");
-                        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                        p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                     }
                     String permission;
                     try {
@@ -140,7 +140,7 @@ public class PMessageListener implements PluginMessageListener {
                                     }
                                 }
                             }
-                            p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                            p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                         }
                     } catch (EOFException | IllegalStateException ex) {
 
@@ -179,7 +179,7 @@ public class PMessageListener implements PluginMessageListener {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                    p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                     success = true;
                 }
             }
@@ -193,7 +193,7 @@ public class PMessageListener implements PluginMessageListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
         } else if (subchannel.equals("Portal")) {
             String name = in.readUTF();
@@ -231,7 +231,7 @@ public class PMessageListener implements PluginMessageListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
         } else if (subchannel.equals("CanExecuteCommand")) {
             Player p = main.getServer().getPlayer(in.readUTF());
@@ -251,7 +251,7 @@ public class PMessageListener implements PluginMessageListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             } else
                 main.getServer().broadcastMessage("player not online");
         } else if (subchannel.equals("EnableFlight")) {
