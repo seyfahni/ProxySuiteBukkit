@@ -9,9 +9,10 @@ import org.bukkit.entity.Player;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class BunCommand implements CommandExecutor {
-    private ProxySuiteBukkit main;
+    private final ProxySuiteBukkit main;
 
     public BunCommand(ProxySuiteBukkit main) {
         this.main = main;
@@ -33,7 +34,7 @@ public class BunCommand implements CommandExecutor {
                 out.writeUTF(player);
                 out.writeUTF(sb.toString().trim());
             } catch (IOException e) {
-                e.printStackTrace();
+                main.getLogger().log(Level.SEVERE, null, e);
             }
             main.getServer().getOnlinePlayers().iterator().next().sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
         }

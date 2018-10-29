@@ -8,21 +8,22 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class PMessageListener implements PluginMessageListener {
 
-    private ProxySuiteBukkit main;
+    private final ProxySuiteBukkit main;
 
     public PMessageListener(ProxySuiteBukkit main) {
         this.main = main;
     }
 
+    @Override
     public void onPluginMessageReceived(String channel, Player pl, byte[] message) {
         ByteArrayDataInput in = ByteStreams.newDataInput(message);
         String subchannel = in.readUTF();
@@ -105,7 +106,7 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF("" + p.getLocation().getPitch());
                     out.writeUTF("" + p.getLocation().getYaw());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
                 p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
@@ -130,23 +131,21 @@ public class PMessageListener implements PluginMessageListener {
                             out.writeUTF("Permissions");
                             out.writeUTF(p.getName());
                             if (permission.contains("#")) {
-                                permLoop:
                                 for (int i = 1000; i > 0; i--)
                                     if (p.hasPermission(permission.replace("#", "" + i))) {
                                         out.writeUTF(permission.replace("#", "" + i));
-                                        break permLoop;
+                                        break;
                                     }
                             } else {
                                 if (p.hasPermission(permission)) {
                                     out.writeUTF(permission);
                                 } else {
                                     String check = "";
-                                    starLoop:
                                     for (String s : permission.toLowerCase().split("\\.")) {
                                         check = check + s + ".";
                                         if (p.hasPermission(check + "*")) {
                                             out.writeUTF(check + "*");
-                                            break starLoop;
+                                            break;
                                         }
                                     }
                                 }
@@ -157,7 +156,7 @@ public class PMessageListener implements PluginMessageListener {
 
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
             }
         } else if (subchannel.equals("SetPortal")) {
@@ -188,7 +187,7 @@ public class PMessageListener implements PluginMessageListener {
                         out.writeUTF(type);
                         out.writeUTF(destination);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        main.getLogger().log(Level.SEVERE, null, e);
                     }
                     p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                     success = true;
@@ -202,7 +201,7 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF(name);
                     out.writeUTF(player);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
                 p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
@@ -219,15 +218,14 @@ public class PMessageListener implements PluginMessageListener {
         } else if (subchannel.equals("Vanish")) {
             Player p = main.getServer().getPlayer(in.readUTF());
             if (p != null) {
-                for (Player p1 : main.getServer().getOnlinePlayers())
-                    if (!p1.hasPermission("proxysuite.vanish.see"))
-                        p1.hidePlayer(p);
+                main.getServer().getOnlinePlayers().stream()
+                        .filter(p1 -> !p1.hasPermission("proxysuite.vanish.see"))
+                        .forEach(p1 -> p1.hidePlayer(p));
             }
         } else if (subchannel.equals("Unvanish")) {
-            Player p = main.getServer().getPlayer(in.readUTF());
-            if (p != null) {
-                for (Player p1 : main.getServer().getOnlinePlayers())
-                    p1.showPlayer(p);
+            Player player = main.getServer().getPlayer(in.readUTF());
+            if (player != null) {
+                main.getServer().getOnlinePlayers().forEach(p -> p.showPlayer(player));
             }
         } else if (subchannel.equals("GetPlayerWorldInfo")) {
             Player p = main.getServer().getPlayer(in.readUTF());
@@ -240,7 +238,7 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF(p.getWorld().getName());
                     out.writeUTF("" + p.getWorld().getFullTime());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
                 p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
@@ -260,7 +258,7 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF(cmd);
                     out.writeUTF("" + canExecute);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
                 p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             } else
@@ -302,7 +300,7 @@ public class PMessageListener implements PluginMessageListener {
                     float pitch = Float.parseFloat(in.readUTF());
                     p.playSound(p.getLocation(), s, volume, pitch);
                 } else {
-                    main.getLogger().info("Received request to play invalid sound to " + p.getName() + ": " + sound);
+                    main.getLogger().log(Level.INFO, "Received request to play invalid sound to {0}: {1}", new Object[]{p.getName(), sound});
                 }
             }
         }

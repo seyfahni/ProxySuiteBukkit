@@ -7,11 +7,13 @@ import org.bukkit.entity.Player;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class Portal {
-    private ProxySuiteBukkit main;
-    private String name;
-    private Block b1, b2;
+    private final ProxySuiteBukkit main;
+    private final String name;
+    private final Block b1;
+    private final Block b2;
 
     public Portal(ProxySuiteBukkit main, String name, Block b1, Block b2) {
         this.main = main;
@@ -28,7 +30,7 @@ public class Portal {
             out.writeUTF(p.getName());
             out.writeUTF(name);
         } catch (IOException e) {
-            e.printStackTrace();
+            main.getLogger().log(Level.SEVERE, null, e);
         }
         p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
     }

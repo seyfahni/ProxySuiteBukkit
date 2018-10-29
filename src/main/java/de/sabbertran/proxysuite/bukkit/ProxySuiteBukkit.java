@@ -18,6 +18,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.logging.Level;
 
 public class ProxySuiteBukkit extends JavaPlugin {
 
@@ -70,12 +72,12 @@ public class ProxySuiteBukkit extends JavaPlugin {
 
         requestPortals = true;
 
-        getLogger().info(getDescription().getName() + " " + getDescription().getVersion() + " by " + getDescription().getAuthors().get(0) + " enabled");
+        getLogger().log(Level.INFO, "{0} {1} by {2} enabled", new Object[]{getDescription().getName(), getDescription().getVersion(), getDescription().getAuthors().get(0)});
     }
 
     @Override
     public void onDisable() {
-        getLogger().info(getDescription().getName() + " " + getDescription().getVersion() + " by " + getDescription().getAuthors().get(0) + " disabled");
+        getLogger().log(Level.INFO, "{0} {1} by {2} disabled", new Object[]{getDescription().getName(), getDescription().getVersion(), getDescription().getAuthors().get(0)});
     }
 
     public void setPortal(Block b1, Block b2, Material material) {
@@ -155,13 +157,14 @@ public class ProxySuiteBukkit extends JavaPlugin {
             out.writeUTF(player.getName());
             out.writeUTF("teleport.warmup.cancelled");
         } catch (IOException e) {
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, null, e);
         }
         player.sendPluginMessage(this, "ProxySuite", b.toByteArray());
     }
 
     public void teleportRequest(Player player, Location destination) {
-        if (player != null && player.isOnline()) {
+        Objects.requireNonNull(player);
+        if (player.isOnline()) {
             player.teleport(destination);
         } else {
             pendingLocationTeleports.put(player.getName(), destination);

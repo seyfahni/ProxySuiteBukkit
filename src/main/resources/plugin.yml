@@ -1,6 +1,6 @@
 name: ProxySuiteBukkit
 main: de.sabbertran.proxysuite.bukkit.ProxySuiteBukkit
-version: 1.2.4
+version: 1.2.5
 website: http://www.sabbertran.de
 author: Sabbertran
 description: ProxySuite Bukkit handler

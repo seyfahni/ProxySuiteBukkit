@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class PortalHandler {
-    private ProxySuiteBukkit main;
-    private ArrayList<Portal> portals;
+    private final ProxySuiteBukkit main;
+    private final ArrayList<Portal> portals;
 
     public PortalHandler(ProxySuiteBukkit main) {
         this.main = main;
-        portals = new ArrayList<Portal>();
+        portals = new ArrayList<>();
     }
 
     public Portal setPortal(Player p, String name, String type) {
