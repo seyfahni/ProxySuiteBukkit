@@ -30,7 +30,7 @@ public class Portal {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+        p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
     }
 
     public String getName() {

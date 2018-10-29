@@ -46,8 +46,8 @@ public class ProxySuiteBukkit extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "ProxySuite");
-        getServer().getMessenger().registerIncomingPluginChannel(this, "ProxySuite", new PMessageListener(this));
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "proxysuite:channel");
+        getServer().getMessenger().registerIncomingPluginChannel(this, "proxysuite:channel", new PMessageListener(this));
 
         if (getServer().getPluginManager().getPlugin("Vault") != null) {
             RegisteredServiceProvider<Chat> chatProvider = getServer().getServicesManager().getRegistration(Chat.class);

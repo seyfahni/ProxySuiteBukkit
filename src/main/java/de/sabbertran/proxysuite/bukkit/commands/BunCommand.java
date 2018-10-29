@@ -35,7 +35,7 @@ public class BunCommand implements CommandExecutor {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            main.getServer().getOnlinePlayers().iterator().next().sendPluginMessage(main, "ProxySuite", b.toByteArray());
+            main.getServer().getOnlinePlayers().iterator().next().sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
         }
         return true;
     }
