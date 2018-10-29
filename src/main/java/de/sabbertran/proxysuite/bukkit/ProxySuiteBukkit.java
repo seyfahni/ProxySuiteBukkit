@@ -13,6 +13,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.logging.Level;
 
 public class ProxySuiteBukkit extends JavaPlugin {
 
@@ -28,9 +29,9 @@ public class ProxySuiteBukkit extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        pendingLocationTeleports = new HashMap<String, Location>();
-        pendingPlayerTeleports = new HashMap<String, String>();
-        pendingSpawnTeleports = new HashMap<String, World>();
+        pendingLocationTeleports = new HashMap<>();
+        pendingPlayerTeleports = new HashMap<>();
+        pendingSpawnTeleports = new HashMap<>();
 
         portalHandler = new PortalHandler(this);
 
@@ -39,8 +40,8 @@ public class ProxySuiteBukkit extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "ProxySuite");
-        getServer().getMessenger().registerIncomingPluginChannel(this, "ProxySuite", new PMessageListener(this));
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "proxysuite:channel");
+        getServer().getMessenger().registerIncomingPluginChannel(this, "proxysuite:channel", new PMessageListener(this));
 
         if (getServer().getPluginManager().getPlugin("Vault") != null) {
             RegisteredServiceProvider<Chat> chatProvider = getServer().getServicesManager().getRegistration(Chat.class);
@@ -63,12 +64,12 @@ public class ProxySuiteBukkit extends JavaPlugin {
 
         requestPortals = true;
 
-        getLogger().info(getDescription().getName() + " " + getDescription().getVersion() + " by " + getDescription().getAuthors().get(0) + " enabled");
+        getLogger().log(Level.INFO, "{0} {1} by {2} enabled", new Object[]{getDescription().getName(), getDescription().getVersion(), getDescription().getAuthors().get(0)});
     }
 
     @Override
     public void onDisable() {
-        getLogger().info(getDescription().getName() + " " + getDescription().getVersion() + " by " + getDescription().getAuthors().get(0) + " disabled");
+        getLogger().log(Level.INFO, "{0} {1} by {2} disabled", new Object[]{getDescription().getName(), getDescription().getVersion(), getDescription().getAuthors().get(0)});
     }
 
     public void setPortal(Block b1, Block b2, Material material) {

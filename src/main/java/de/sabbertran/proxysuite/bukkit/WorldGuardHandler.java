@@ -7,7 +7,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.entity.Player;
 
 public class WorldGuardHandler {
-    private ProxySuiteBukkit main;
+    private final ProxySuiteBukkit main;
 
     public WorldGuardHandler(ProxySuiteBukkit main) {
         this.main = main;

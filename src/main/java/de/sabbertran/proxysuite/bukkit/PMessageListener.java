@@ -13,15 +13,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class PMessageListener implements PluginMessageListener {
 
-    private ProxySuiteBukkit main;
+    private final ProxySuiteBukkit main;
 
     public PMessageListener(ProxySuiteBukkit main) {
         this.main = main;
     }
 
+    @Override
     public void onPluginMessageReceived(String channel, Player pl, byte[] message) {
         ByteArrayDataInput in = ByteStreams.newDataInput(message);
         String subchannel = in.readUTF();
@@ -29,52 +31,18 @@ public class PMessageListener implements PluginMessageListener {
             String player = in.readUTF();
             Player p = main.getServer().getPlayer(player);
             String type = in.readUTF();
-            if (type.equals("LOCATION")) {
-                String world = in.readUTF();
-                double x = Double.parseDouble(in.readUTF());
-                String y = in.readUTF();
-                double z = Double.parseDouble(in.readUTF());
-                float pitch = Float.parseFloat(in.readUTF());
-                float yaw = Float.parseFloat(in.readUTF());
-                World w;
-                if (world.equals("CURRENT")) {
-                    w = p.getWorld();
-                } else {
-                    w = main.getServer().getWorld(world);
-                }
-                if (w != null) {
-                    Location destination;
-                    if (y.equals("HIGHEST")) {
-                        destination = w.getHighestBlockAt(new Location(w, x, 64, z, yaw, pitch)).getLocation();
-                    } else {
-                        destination = new Location(w, x, Double.parseDouble(y), z, yaw, pitch);
-                    }
-                    if (p != null && p.isOnline()) {
-                        p.teleport(destination);
-                    } else {
-                        main.getPendingLocationTeleports().put(player, destination);
-                    }
-                }
-            } else if (type.equals("PLAYER")) {
-                String to = in.readUTF();
-                Player p_to = main.getServer().getPlayer(to);
-                if (p != null && p.isOnline()) {
-                    if (p_to != null && p_to.isOnline()) {
-                        p.teleport(p_to);
-                    }
-                } else {
-                    main.getPendingPlayerTeleports().put(player, to);
-                }
-            } else if (type.equals("SPAWN")) {
-                String world = in.readUTF();
-                World w = main.getServer().getWorld(world);
-                if (w != null) {
-                    if (p != null && p.isOnline()) {
-                        p.teleport(w.getSpawnLocation());
-                    } else {
-                        main.getPendingSpawnTeleports().put(player, w);
-                    }
-                }
+            switch (type) {
+                case "LOCATION":
+                    onTeleportToLocation(in, p, player);
+                    break;
+                case "PLAYER":
+                    onTeleportToPlayer(in, p, player);
+                    break;
+                case "SPAWN":
+                    onTeleportToSpawn(in, p, player);
+                    break;
+                default:
+                    break;
             }
         } else if (subchannel.equals("GetPosition")) {
             String player = in.readUTF();
@@ -94,9 +62,9 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF("" + p.getLocation().getPitch());
                     out.writeUTF("" + p.getLocation().getYaw());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
         } else if (subchannel.equals("GetPermissions")) {
             String player = in.readUTF();
@@ -109,7 +77,7 @@ public class PMessageListener implements PluginMessageListener {
                         out.writeUTF("Permissions");
                         out.writeUTF(p.getName());
                         out.writeUTF("*");
-                        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                        p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                     }
                     String permission;
                     try {
@@ -119,34 +87,32 @@ public class PMessageListener implements PluginMessageListener {
                             out.writeUTF("Permissions");
                             out.writeUTF(p.getName());
                             if (permission.contains("#")) {
-                                permLoop:
                                 for (int i = 1000; i > 0; i--)
                                     if (p.hasPermission(permission.replace("#", "" + i))) {
                                         out.writeUTF(permission.replace("#", "" + i));
-                                        break permLoop;
+                                        break;
                                     }
                             } else {
                                 if (p.hasPermission(permission)) {
                                     out.writeUTF(permission);
                                 } else {
                                     String check = "";
-                                    starLoop:
                                     for (String s : permission.toLowerCase().split("\\.")) {
                                         check = check + s + ".";
                                         if (p.hasPermission(check + "*")) {
                                             out.writeUTF(check + "*");
-                                            break starLoop;
+                                            break;
                                         }
                                     }
                                 }
                             }
-                            p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                            p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                         }
                     } catch (EOFException | IllegalStateException ex) {
 
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
             }
         } else if (subchannel.equals("SetPortal")) {
@@ -177,9 +143,9 @@ public class PMessageListener implements PluginMessageListener {
                         out.writeUTF(type);
                         out.writeUTF(destination);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        main.getLogger().log(Level.SEVERE, null, e);
                     }
-                    p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                    p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
                     success = true;
                 }
             }
@@ -191,9 +157,10 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF(name);
                     out.writeUTF(player);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                if (p != null)
+                    p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
         } else if (subchannel.equals("Portal")) {
             String name = in.readUTF();
@@ -208,15 +175,14 @@ public class PMessageListener implements PluginMessageListener {
         } else if (subchannel.equals("Vanish")) {
             Player p = main.getServer().getPlayer(in.readUTF());
             if (p != null) {
-                for (Player p1 : main.getServer().getOnlinePlayers())
-                    if (!p1.hasPermission("proxysuite.vanish.see"))
-                        p1.hidePlayer(p);
+                main.getServer().getOnlinePlayers().stream()
+                        .filter(p1 -> !p1.hasPermission("proxysuite.vanish.see"))
+                        .forEach(p1 -> p1.hidePlayer(p));
             }
         } else if (subchannel.equals("Unvanish")) {
-            Player p = main.getServer().getPlayer(in.readUTF());
-            if (p != null) {
-                for (Player p1 : main.getServer().getOnlinePlayers())
-                    p1.showPlayer(p);
+            Player player = main.getServer().getPlayer(in.readUTF());
+            if (player != null) {
+                main.getServer().getOnlinePlayers().forEach(p -> p.showPlayer(player));
             }
         } else if (subchannel.equals("GetPlayerWorldInfo")) {
             Player p = main.getServer().getPlayer(in.readUTF());
@@ -229,9 +195,9 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF(p.getWorld().getName());
                     out.writeUTF("" + p.getWorld().getFullTime());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             }
         } else if (subchannel.equals("CanExecuteCommand")) {
             Player p = main.getServer().getPlayer(in.readUTF());
@@ -249,9 +215,9 @@ public class PMessageListener implements PluginMessageListener {
                     out.writeUTF(cmd);
                     out.writeUTF("" + canExecute);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
-                p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
             } else
                 main.getServer().broadcastMessage("player not online");
         } else if (subchannel.equals("EnableFlight")) {
@@ -291,8 +257,59 @@ public class PMessageListener implements PluginMessageListener {
                     float pitch = Float.parseFloat(in.readUTF());
                     p.playSound(p.getLocation(), s, volume, pitch);
                 } else {
-                    main.getLogger().info("Received request to play invalid sound to " + p.getName() + ": " + sound);
+                    main.getLogger().log(Level.INFO, "Received request to play invalid sound to {0}: {1}", new Object[]{p.getName(), sound});
                 }
+            }
+        }
+    }
+
+    private void onTeleportToSpawn(ByteArrayDataInput in, Player p, String player) {
+        String world = in.readUTF();
+        World w = main.getServer().getWorld(world);
+        if (w != null) {
+            if (p != null && p.isOnline()) {
+                p.teleport(w.getSpawnLocation());
+            } else {
+                main.getPendingSpawnTeleports().put(player, w);
+            }
+        }
+    }
+
+    private void onTeleportToPlayer(ByteArrayDataInput in, Player p, String player) {
+        String to = in.readUTF();
+        Player p_to = main.getServer().getPlayer(to);
+        if (p != null && p.isOnline()) {
+            if (p_to != null && p_to.isOnline()) {
+                p.teleport(p_to);
+            }
+        } else {
+            main.getPendingPlayerTeleports().put(player, to);
+        }
+    }
+
+    private void onTeleportToLocation(ByteArrayDataInput in, Player p, String player) throws NumberFormatException {
+        String world = in.readUTF();
+        double x = Double.parseDouble(in.readUTF());
+        String y = in.readUTF();
+        double z = Double.parseDouble(in.readUTF());
+        float pitch = Float.parseFloat(in.readUTF());
+        float yaw = Float.parseFloat(in.readUTF());
+        World w;
+        if (world.equals("CURRENT")) {
+            w = p.getWorld();
+        } else {
+            w = main.getServer().getWorld(world);
+        }       if (w != null) {
+            Location destination;
+            if (y.equals("HIGHEST")) {
+                destination = w.getHighestBlockAt(new Location(w, x, 64, z, yaw, pitch)).getLocation();
+            } else {
+                destination = new Location(w, x, Double.parseDouble(y), z, yaw, pitch);
+            }
+            if (p != null && p.isOnline()) {
+                p.teleport(destination);
+            } else {
+                main.getPendingLocationTeleports().put(player, destination);
             }
         }
     }

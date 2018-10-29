@@ -15,9 +15,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class Events implements Listener {
-    private ProxySuiteBukkit main;
+    private final ProxySuiteBukkit main;
 
     public Events(ProxySuiteBukkit main) {
         this.main = main;
@@ -39,13 +40,9 @@ public class Events implements Listener {
                     out.writeUTF(p.getName());
                     out.writeUTF(prefix);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
-                main.getServer().getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
-                    public void run() {
-                        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
-                    }
-                }, 2);
+                main.getServer().getScheduler().scheduleSyncDelayedTask(main, () -> p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray()), 2);
             }
             String suffix = main.getChat().getPlayerSuffix(p);
             if (suffix != null && !suffix.equals("")) {
@@ -56,13 +53,9 @@ public class Events implements Listener {
                     out.writeUTF(p.getName());
                     out.writeUTF(suffix);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    main.getLogger().log(Level.SEVERE, null, e);
                 }
-                main.getServer().getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
-                    public void run() {
-                        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
-                    }
-                }, 2);
+                main.getServer().getScheduler().scheduleSyncDelayedTask(main, () -> p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray()), 2);
             }
         }
 
@@ -86,13 +79,11 @@ public class Events implements Listener {
             try {
                 out.writeUTF("GetPortals");
             } catch (IOException e) {
-                e.printStackTrace();
+                main.getLogger().log(Level.SEVERE, null, e);
             }
-            main.getServer().getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
-                public void run() {
-                    p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
-                    main.setRequestPortals(false);
-                }
+            main.getServer().getScheduler().scheduleSyncDelayedTask(main, () -> {
+                p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
+                main.setRequestPortals(false);
             }, 20L);
         }
     }
@@ -108,9 +99,9 @@ public class Events implements Listener {
             out.writeUTF("" + p.getAllowFlight());
             out.writeUTF("" + p.isFlying());
         } catch (IOException e) {
-            e.printStackTrace();
+            main.getLogger().log(Level.SEVERE, null, e);
         }
-        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+        p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -146,9 +137,9 @@ public class Events implements Listener {
                 out.writeUTF("" + p.getLocation().getPitch());
                 out.writeUTF("" + p.getLocation().getYaw());
             } catch (IOException e) {
-                e.printStackTrace();
+                main.getLogger().log(Level.SEVERE, null, e);
             }
-            p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+            p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
         }
     }
 
@@ -161,8 +152,8 @@ public class Events implements Listener {
             out.writeUTF("WorldChange");
             out.writeUTF(p.getName());
         } catch (IOException e) {
-            e.printStackTrace();
+            main.getLogger().log(Level.SEVERE, null, e);
         }
-        p.sendPluginMessage(main, "ProxySuite", b.toByteArray());
+        p.sendPluginMessage(main, "proxysuite:channel", b.toByteArray());
     }
 }
